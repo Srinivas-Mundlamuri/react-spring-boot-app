@@ -5,6 +5,7 @@ import com.assignment.project.service.UrlShortenerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -20,14 +21,29 @@ public class UrlShortenerController {
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<?> shorten(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> shorten(@RequestBody Map<String, String> body, HttpServletRequest request) {
         String url = body.get("url");
         if (url == null || !url.matches("^(http|https)://.*$")) {
             return ResponseEntity.badRequest().body("Invalid URL");
         }
 
         UrlMapping mapping = service.createShortUrl(url);
-        return ResponseEntity.ok(Map.of("shortUrl", "http://localhost:7070/" + mapping.getShortCode()));
+        String baseUrl = getBaseUrl(request);
+        return ResponseEntity.ok(Map.of("shortUrl", baseUrl + "/r/" + mapping.getShortCode()));
+    }
+
+    private String getBaseUrl(HttpServletRequest request) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        
+        // Handle default ports
+        if ((scheme.equals("http") && serverPort == 80) || 
+            (scheme.equals("https") && serverPort == 443)) {
+            return scheme + "://" + serverName;
+        } else {
+            return scheme + "://" + serverName + ":" + serverPort;
+        }
     }
 
     @GetMapping("/{code}")

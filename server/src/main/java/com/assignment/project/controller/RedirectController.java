@@ -17,7 +17,7 @@ public class RedirectController {
         this.service = service;
     }
 
-    @GetMapping("/{shortCode}")
+    @GetMapping("/r/{shortCode}")
     public ResponseEntity<?> redirectToOriginalUrl(@PathVariable String shortCode) {
         return service.getOriginalUrl(shortCode)
                 .map(mapping -> {

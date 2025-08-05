@@ -20,7 +20,7 @@ public class UrlShortenerService {
     public UrlMapping createShortUrl(String originalUrl) {
         Optional<UrlMapping> existing = repository.findByOriginalUrl(originalUrl);
         if (existing.isPresent()) {
-            return null;
+            return existing.get();
         }
 
         String shortCode = generateRandomCode(8);
