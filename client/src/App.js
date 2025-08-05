@@ -7,6 +7,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const isValidUrl = (string) => {
     try {
@@ -17,6 +18,33 @@ const App = () => {
     }
   };
 
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await fetch('/api/url/history');
+      if (response.ok) {
+        const data = await response.json();
+        const formattedHistory = data.map(item => ({
+          original: item.original,
+          short: item.shortUrl, // Use the full shortUrl from backend
+          timestamp: new Date(item.createdAt),
+          isExpired: item.isExpired,
+          expiresIn: item.expiresIn
+        })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setHistory(formattedHistory);
+      }
+    } catch (err) {
+      console.error('Failed to fetch history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Load history on component mount
+  React.useEffect(() => {
+    fetchHistory();
+  }, []);
+
   const shortenUrl = async () => {
     if (!url.trim()) {
       setError('Please enter a URL');
@@ -26,6 +54,13 @@ const App = () => {
     if (!isValidUrl(url)) {
       setError('Please enter a valid URL (must start with http:// or https://)');
       return;
+    }
+
+    // Check if URL already exists in history
+    const existingEntry = history.find(item => item.original === url);
+    if (existingEntry) {
+      setError('');
+      alert('🔄 This URL was already shortened! Using existing short URL.');
     }
 
     setLoading(true);
@@ -43,7 +78,8 @@ const App = () => {
       if (response.ok) {
         const data = await response.json();
         setShortUrl(data.shortUrl);
-        setHistory(prev => [...prev, { original: url, short: data.shortUrl, timestamp: new Date() }]);
+        // Refresh history from backend to get latest data
+        fetchHistory();
       } else {
         const errorData = await response.text();
         setError(errorData || 'Failed to shorten URL');
@@ -137,10 +173,25 @@ const App = () => {
 
         {history.length > 0 && (
           <div className="history">
-            <h3>📋 Recent URLs</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3>📋 URL History</h3>
+              <button 
+                onClick={fetchHistory} 
+                disabled={historyLoading}
+                style={{ 
+                  padding: '8px 16px', 
+                  borderRadius: '6px', 
+                  border: '1px solid #ddd',
+                  background: '#f8f9fa',
+                  cursor: 'pointer'
+                }}
+              >
+                {historyLoading ? '🔄 Loading...' : '🔄 Refresh'}
+              </button>
+            </div>
             <div className="history-list">
-              {history.slice(-5).reverse().map((item, index) => (
-                <div key={index} className="history-item">
+              {history.map((item, index) => (
+                <div key={index} className={`history-item ${item.isExpired ? 'expired' : ''}`}>
                   <div className="original-url">
                     <strong>Original:</strong> {item.original}
                   </div>
@@ -153,6 +204,13 @@ const App = () => {
                     >
                       {item.short}
                     </span>
+                    {item.isExpired ? (
+                      <span className="status-badge expired">❌ EXPIRED</span>
+                    ) : (
+                      <span className="status-badge active">
+                        ✅ ACTIVE ({item.expiresIn}min left)
+                      </span>
+                    )}
                   </div>
                   <div className="timestamp">
                     {item.timestamp.toLocaleString()}

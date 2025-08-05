@@ -5,6 +5,7 @@ import com.assignment.project.repository.UrlMappingRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -20,7 +21,10 @@ public class UrlShortenerService {
     public UrlMapping createShortUrl(String originalUrl) {
         Optional<UrlMapping> existing = repository.findByOriginalUrl(originalUrl);
         if (existing.isPresent()) {
-            return existing.get();
+            // Update timestamp to extend expiration time
+            UrlMapping existingMapping = existing.get();
+            existingMapping.setCreatedAt(Instant.now());
+            return repository.save(existingMapping);
         }
 
         String shortCode = generateRandomCode(8);
@@ -34,6 +38,10 @@ public class UrlShortenerService {
 
     public Optional<UrlMapping> getOriginalUrl(String code) {
         return repository.findByShortCode(code);
+    }
+
+    public List<UrlMapping> getAllUrls() {
+        return repository.findAll();
     }
 
     private String generateRandomCode(int length) {

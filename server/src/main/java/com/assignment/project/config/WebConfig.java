@@ -14,7 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**/*")
+        registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/")
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver() {
@@ -26,8 +26,8 @@ public class WebConfig implements WebMvcConfigurer {
                             return requestedResource;
                         }
                         
-                        // If resource not found and it's not an API call, serve index.html for React routing
-                        if (!resourcePath.startsWith("api/")) {
+                        // If resource not found and it's not an API call or redirect, serve index.html for React routing
+                        if (!resourcePath.startsWith("api/") && !resourcePath.startsWith("r/")) {
                             return new ClassPathResource("/static/index.html");
                         }
                         

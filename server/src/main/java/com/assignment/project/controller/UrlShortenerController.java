@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/url")
@@ -30,6 +34,40 @@ public class UrlShortenerController {
         UrlMapping mapping = service.createShortUrl(url);
         String baseUrl = getBaseUrl(request);
         return ResponseEntity.ok(Map.of("shortUrl", baseUrl + "/r/" + mapping.getShortCode()));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory(HttpServletRequest request) {
+        try {
+            List<UrlMapping> allUrls = service.getAllUrls();
+            String baseUrl = getBaseUrl(request);
+            
+            List<Map<String, Object>> historyResponse = allUrls.stream()
+                    .map(mapping -> {
+                        Duration duration = Duration.between(mapping.getCreatedAt(), Instant.now());
+                        boolean isExpired = duration.toMinutes() >= 5;
+                        
+                        Map<String, Object> item = new HashMap<>();
+                        item.put("original", mapping.getOriginalUrl());
+                        item.put("shortCode", mapping.getShortCode());
+                        item.put("shortUrl", baseUrl + "/r/" + mapping.getShortCode()); // Full short URL
+                        item.put("createdAt", mapping.getCreatedAt());
+                        item.put("isExpired", isExpired);
+                        item.put("expiresIn", Math.max(0, 5 - duration.toMinutes()));
+                        return item;
+                    })
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(historyResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(Arrays.asList());
+        }
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        return ResponseEntity.ok(Map.of("message", "API is working!", "timestamp", Instant.now()));
     }
 
     private String getBaseUrl(HttpServletRequest request) {

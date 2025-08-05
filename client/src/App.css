@@ -290,3 +290,34 @@ body {
     padding: 20px;
   }
 }
+
+/* Expiration Status Styles */
+.status-badge {
+  margin-left: 10px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.status-badge.expired {
+  background-color: #ffe6e6;
+  color: #d73027;
+  border: 1px solid #d73027;
+}
+
+.status-badge.active {
+  background-color: #e6ffe6;
+  color: #27d73b;
+  border: 1px solid #27d73b;
+}
+
+.history-item.expired {
+  opacity: 0.7;
+  background-color: #f8f8f8;
+}
+
+.history-item.expired .clickable-url {
+  text-decoration: line-through;
+  color: #999;
+}
