@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔗 URL Shortener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .url-form {
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .url-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .shorten-btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .shorten-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .shorten-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #feb2b2;
+            display: none;
+        }
+
+        .result {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result h3 {
+            color: #22543d;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+        }
+
+        .short-url-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .short-url-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 2px solid #9ae6b4;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+        }
+
+        .copy-btn {
+            padding: 12px 20px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+
+        .note {
+            color: #718096;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer p {
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .demo-section {
+            background: #fff5f5;
+            border: 2px solid #feb2b2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .demo-section h3 {
+            color: #c53030;
+            margin-bottom: 12px;
+        }
+
+        .demo-section p {
+            color: #744210;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .url-input {
+                min-width: auto;
+            }
+
+            .short-url-container {
+                flex-direction: column;
+            }
+
+            .short-url-input {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔗 URL Shortener</h1>
+            <p>Transform long URLs into short, shareable links</p>
+        </header>
+
+        <div class="url-form">
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="urlInput"
+                    placeholder="Enter your URL here (e.g., https://www.google.com)"
+                    class="url-input"
+                />
+                <button onclick="shortenUrl()" class="shorten-btn" id="shortenBtn">
+                    Shorten URL
+                </button>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+            <div id="loading" class="loading">🔄 Shortening your URL...</div>
+
+            <div id="result" class="result">
+                <h3>✅ Your shortened URL:</h3>
+                <div class="short-url-container">
+                    <input
+                        type="text"
+                        id="shortUrlInput"
+                        readonly
+                        class="short-url-input"
+                    />
+                    <button onclick="copyToClipboard()" class="copy-btn">
+                        📋 Copy
+                    </button>
+                </div>
+                <p class="note">
+                    ⏰ <strong>Note:</strong> This link will expire in 5 minutes for security.
+                </p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🚨 Demo Instructions</h3>
+            <p>
+                <strong>Backend is running on port 7070!</strong><br>
+                • API endpoint: <code>POST http://localhost:7070/api/url/shorten</code><br>
+                • Redirect endpoint: <code>GET http://localhost:7070/{shortCode}</code><br>
+                • Try entering: <code>https://www.google.com</code><br>
+                • The generated short URL will redirect you to Google!
+            </p>
+        </div>
+
+        <footer class="footer">
+            <p>
+                💡 <strong>How it works:</strong> Enter any URL, get a short link, and share it anywhere!<br>
+                🔒 Links expire after 5 minutes for security.<br>
+                🚀 Built with Spring Boot + React for the Full Stack Engineer Assignment
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function isValidUrl(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === 'http:' || url.protocol === 'https:';
+            } catch {
+                return false;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('shortenBtn').disabled = true;
+            document.getElementById('shortenBtn').textContent = 'Shortening...';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('shortenBtn').disabled = false;
+            document.getElementById('shortenBtn').textContent = 'Shorten URL';
+        }
+
+        async function shortenUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+
+            hideError();
+
+            if (!url) {
+                showError('Please enter a URL');
+                return;
+            }
+
+            if (!isValidUrl(url)) {
+                showError('Please enter a valid URL (must start with http:// or https://)');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('http://localhost:7070/api/url/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('shortUrlInput').value = data.shortUrl;
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    const errorData = await response.text();
+                    showError(errorData || 'Failed to shorten URL');
+                }
+            } catch (err) {
+                showError('Network error. Please make sure the server is running on port 7070.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function copyToClipboard() {
+            const shortUrl = document.getElementById('shortUrlInput').value;
+            
+            try {
+                await navigator.clipboard.writeText(shortUrl);
+                alert('✅ Copied to clipboard!');
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = shortUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ Copied to clipboard!');
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                shortenUrl();
+            }
+        });
+
+        // Auto-focus on input
+        window.addEventListener('load', function() {
+            document.getElementById('urlInput').focus();
+        });
+    </script>
+</body>
+</html>
