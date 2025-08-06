@@ -18,6 +18,7 @@ const App = () => {
     }
   };
 
+  //To fetch all history
   const fetchHistory = async () => {
     setHistoryLoading(true);
     try {
@@ -40,11 +41,41 @@ const App = () => {
     }
   };
 
+  //To delete
+  const deleteUrl = async (shortCode, originalUrl) => {
+    if (!window.confirm(`Are you sure you want to delete the short URL for "${originalUrl}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/url/delete/${shortCode}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        alert('✅ URL deleted successfully!');
+        // Refresh history to reflect the deletion
+        fetchHistory();
+        // Clear current shortUrl if it matches the deleted one
+        if (shortUrl && shortUrl.includes(shortCode)) {
+          setShortUrl('');
+        }
+      } else {
+        const errorData = await response.json();
+        alert(`❌ Failed to delete URL: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      alert('❌ Network error. Please make sure the server is running.');
+      console.error('Delete error:', err);
+    }
+  };
+
   // Load history on component mount
   React.useEffect(() => {
     fetchHistory();
   }, []);
 
+  //To create short URL
   const shortenUrl = async () => {
     if (!url.trim()) {
       setError('Please enter a URL');
@@ -214,6 +245,22 @@ const App = () => {
                   </div>
                   <div className="timestamp">
                     {item.timestamp.toLocaleString()}
+                  </div>
+                  <div className="history-actions">
+                    <button
+                      onClick={() => copyToClipboard(item.short)}
+                      className="action-btn copy-btn-small"
+                      title="Copy to clipboard"
+                    >
+                      📋 Copy
+                    </button>
+                    <button
+                      onClick={() => deleteUrl(item.short.split('/').pop(), item.original)}
+                      className="action-btn delete-btn"
+                      title="Delete this URL"
+                    >
+                      🗑️ Delete
+                    </button>
                   </div>
                 </div>
               ))}

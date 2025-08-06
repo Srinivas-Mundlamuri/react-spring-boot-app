@@ -96,4 +96,17 @@ public class UrlShortenerController {
                 })
                 .orElse(ResponseEntity.status(404).body("Short URL not found"));
     }
+    @DeleteMapping("/delete/{shortCode}")
+    public ResponseEntity<?> deleteUrl(@PathVariable String shortCode) {
+        try {
+            boolean deleted = service.deleteUrl(shortCode);
+            if (deleted) {
+                return ResponseEntity.ok(Map.of("message", "URL deleted successfully"));
+            } else {
+                return ResponseEntity.status(404).body(Map.of("error", "Short URL not found"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete URL"));
+        }
+    }
 }

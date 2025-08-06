@@ -43,6 +43,15 @@ public class UrlShortenerService {
     public List<UrlMapping> getAllUrls() {
         return repository.findAll();
     }
+    
+    public boolean deleteUrl(String shortCode) {
+        Optional<UrlMapping> mapping = repository.findByShortCode(shortCode);
+        if (mapping.isPresent()) {
+            repository.delete(mapping.get());
+            return true;
+        }
+        return false;
+    }
 
     private String generateRandomCode(int length) {
         String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
